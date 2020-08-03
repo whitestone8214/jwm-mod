@@ -50,6 +50,11 @@ static char restack_pending = 0;
 static char task_update_pending = 0;
 static char pager_update_pending = 0;
 
+static int _nWindows = 0;
+static ClientNode *_windowFirst = NULL;
+static ClientNode *_windowFrom = NULL;
+static ClientNode *_windowThis = NULL;
+
 static void Signal(void);
 
 static void ProcessBinding(MouseContextType context, ClientNode *np,
@@ -273,8 +278,7 @@ void Signal(void)
 }
 
 /** Process an event. */
-void ProcessEvent(XEvent *event)
-{
+void ProcessEvent(XEvent *event) {
    switch(event->type) {
    case ButtonPress:
    case ButtonRelease:
@@ -474,9 +478,7 @@ void ToggleMaximized(ClientNode *np, MaxFlags flags)
 }
 
 /** Process a key or mouse binding. */
-void ProcessBinding(MouseContextType context, ClientNode *np,
-                    unsigned state, int code, int x, int y)
-{
+void ProcessBinding(MouseContextType context, ClientNode *np, unsigned state, int code, int x, int y) {
    const ActionType key = GetKey(context, state, code);
    const char keyAction = context == MC_NONE;
    switch(key.action) {
@@ -691,22 +693,60 @@ void ProcessBinding(MouseContextType context, ClientNode *np,
 }
 
 /** Process a key press event. */
-void HandleKeyPress(const XKeyEvent *event)
-{
-   ClientNode *np;
-   SetMousePosition(event->x_root, event->y_root, event->window);
-   np = GetActiveClient();
-   ProcessBinding(MC_NONE, np, event->state, event->keycode, 0, 0);
+void HandleKeyPress(const XKeyEvent *event) {
+	SetMousePosition(event->x_root, event->y_root, event->window);
+	ClientNode *np = GetActiveClient();
+	
+	if ((event->state == 8) && (event->keycode == 23)) {
+		if (_windowFrom == NULL) {
+			// Initialize
+			_nWindows = 0;
+			_windowFirst = NULL;
+			_windowFrom = NULL;
+			_windowThis = NULL;
+			JXGrabKeyboard(display, rootWindow, False, GrabModeAsync, GrabModeAsync, CurrentTime);
+			
+			// First window
+			{ClientNode *_window = np; while (_window != NULL) {
+				if (_window->prev == NULL) {_windowFirst = _window; break;}
+				_window = _window->prev;
+			}}
+			
+			// Count windows
+			{ClientNode *_window = _windowFirst; while (_window != NULL) {_nWindows++; _window = _window->next;}}
+			
+			// Where the event came from?
+			_windowFrom = np;
+		}
+		
+		// Next window. First window if not
+		_windowThis = (_windowThis != NULL) ? _windowThis->next : np->next;
+		if (_windowThis == NULL) _windowThis = _windowFirst;
+		
+		indicator_window_switch_off();
+		indicator_window_switch_on(_windowThis, settings.moveStatusType);
+		indicator_window_switch_update(_windowThis);
+	}
+	else ProcessBinding(MC_NONE, np, event->state, event->keycode, 0, 0);
 }
-
-/** Handle a key release event. */
-void HandleKeyRelease(const XKeyEvent *event)
-{
+void HandleKeyRelease(const XKeyEvent *event) {
+	if ((event->state == 8) && (event->keycode == 64)) {
+		if ((_windowFrom != NULL) && (_windowThis != NULL) && (_windowFrom != _windowThis)) {
+			RestoreClient(_windowThis, 1);
+			JXRaiseWindow(display, _windowThis->parent ? _windowThis->parent : _windowThis->window);
+			FocusClient(_windowThis);
+		}
+		
+		indicator_window_switch_off();
+		JXUngrabKeyboard(display, CurrentTime);
+		_windowThis = NULL;
+		_windowFrom = NULL;
+		_windowFirst = NULL;
+		_nWindows = 0;
+	}
+	
    const ActionType key = GetKey(MC_NONE, event->state, event->keycode);
-   if(   key.action != ACTION_NEXTSTACK
-      && key.action != ACTION_NEXT
-      && key.action != ACTION_PREV
-      && key.action != ACTION_PREVSTACK) {
+   if (key.action != ACTION_NEXTSTACK && key.action != ACTION_NEXT && key.action != ACTION_PREV && key.action != ACTION_PREVSTACK) {
       StopWindowWalk();
    }
 }

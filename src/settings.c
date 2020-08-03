@@ -38,7 +38,7 @@ void InitializeSettings(void)
    settings.moveMode = MOVE_OPAQUE;
    settings.moveStatusType = SW_SCREEN;
    settings.resizeStatusType = SW_SCREEN;
-   settings.focusModel = FOCUS_SLOPPY;
+   settings.focusModel = FOCUS_CLICK;
    settings.resizeMode = RESIZE_OPAQUE;
    settings.popupDelay = 600;
    settings.desktopDelay = 1000;
@@ -46,7 +46,7 @@ void InitializeSettings(void)
    settings.popupMask = POPUP_ALL;
    settings.activeClientOpacity = UINT_MAX;
    settings.inactiveClientOpacity = (unsigned int)(0.75 * UINT_MAX);
-   settings.borderWidth = 5;
+   settings.borderWidth = 0;
    settings.titleHeight = 0;
    settings.titleTextAlignment = ALIGN_LEFT;
    settings.desktopWidth = 4;
@@ -70,7 +70,7 @@ void StartupSettings(void)
 
    FixRange(&settings.cornerRadius, 0, 5, 4);
 
-   FixRange(&settings.borderWidth, 1, 128, 4);
+   FixRange(&settings.borderWidth, 0, 128, 0);
    FixRange(&settings.titleHeight, 0, 256, 0);
 
    FixRange(&settings.doubleClickDelta, 0, 64, 2);

@@ -43,13 +43,5 @@ const char * const BASE_CONFIG =
 
 const char * const DEFAULT_CONFIG =
    "<JWM>"
-      "<RootMenu onroot=\"1\">"
-         "<Program>xterm</Program>"
-         "<Restart/>"
-         "<Exit/>"
-      "</RootMenu>"
-      "<Tray x=\"0\" y=\"-1\">"
-         "<Pager/><TaskList/><Dock/><Clock/>"
-      "</Tray>"
    "</JWM>"
 ;

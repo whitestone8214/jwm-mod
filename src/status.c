@@ -21,12 +21,13 @@ static unsigned int statusWindowHeight;
 static unsigned int statusWindowWidth;
 static int statusWindowX, statusWindowY;
 
-static void CreateMoveResizeWindow(const ClientNode *np,
-                                   StatusWindowType type);
+static int _widthDisplay;
+static int _heightDisplay;
+
+static void CreateMoveResizeWindow(const ClientNode *np, StatusWindowType type);
 static void DrawMoveResizeWindow(const ClientNode *np, StatusWindowType type);
 static void DestroyMoveResizeWindow(void);
-static void GetMoveResizeCoordinates(const ClientNode *np,
-                                     StatusWindowType type, int *x, int *y);
+static void GetMoveResizeCoordinates(const ClientNode *np, StatusWindowType type, int *x, int *y);
 
 /** Get the location to place the status window. */
 void GetMoveResizeCoordinates(const ClientNode *np, StatusWindowType type,
@@ -200,4 +201,82 @@ void UpdateResizeWindow(ClientNode *np, int gwidth, int gheight)
 void DestroyResizeWindow(void)
 {
    DestroyMoveResizeWindow();
+}
+
+void indicator_window_switch_on(const ClientNode *np, StatusWindowType type) {
+	_widthDisplay = DisplayWidth(display, rootScreen);
+	_heightDisplay = DisplayHeight(display, rootScreen);
+	
+	int _widthWindow = (_widthDisplay / 4) * 3;
+	int _heightWindow = _heightDisplay / 10;
+	int _xWindow = _widthDisplay / 4;
+	int _yWindow = (_heightDisplay / 20) * 9;
+	
+   XSetWindowAttributes attrs;
+   long attrMask;
+
+   if(type == SW_OFF) return;
+
+   //statusWindowHeight = GetStringHeight(FONT_MENU) * 3;
+   //statusWindowWidth = GetStringWidth(FONT_MENU, " 00000 x 00000 ") + 2;
+
+   GetMoveResizeCoordinates(np, type, &statusWindowX, &statusWindowY);
+
+   attrMask = 0;
+
+   attrMask |= CWBackPixel;
+   attrs.background_pixel = colors[COLOR_MENU_BG];
+
+   attrMask |= CWSaveUnder;
+   attrs.save_under = True;
+
+   attrMask |= CWOverrideRedirect;
+   attrs.override_redirect = True;
+
+   statusWindow = JXCreateWindow(display, rootWindow, _xWindow, _yWindow, _widthWindow, _heightWindow, 0, CopyFromParent, InputOutput, CopyFromParent, attrMask, &attrs);
+   SetAtomAtom(statusWindow, ATOM_NET_WM_WINDOW_TYPE, ATOM_NET_WM_WINDOW_TYPE_NOTIFICATION);
+
+   JXMapRaised(display, statusWindow);
+}
+void indicator_window_switch_update(ClientNode *np) {
+	_widthDisplay = DisplayWidth(display, rootScreen);
+	_heightDisplay = DisplayHeight(display, rootScreen);
+	
+	int _widthWindow = (_widthDisplay / 4) * 3;
+	int _heightWindow = _heightDisplay / 10;
+	int _xWindow = _widthDisplay / 8;
+	int _yWindow = (_heightDisplay / 20) * 9;
+	
+   char str[80];
+   unsigned int width;
+
+   JXMoveResizeWindow(display, statusWindow, _xWindow, _yWindow, _widthWindow, _heightWindow);
+
+   /* Clear the background. */
+   JXClearWindow(display, statusWindow);
+
+   /* Draw the border. */
+   if (settings.menuDecorations == DECO_MOTIF) {
+      JXSetForeground(display, rootGC, colors[COLOR_MENU_UP]);
+      JXDrawLine(display, statusWindow, rootGC, 0, 0, _widthWindow, 0);
+      JXDrawLine(display, statusWindow, rootGC, 0, 0, 0, _heightWindow);
+      JXSetForeground(display, rootGC, colors[COLOR_MENU_DOWN]);
+      JXDrawLine(display, statusWindow, rootGC, 0, _heightWindow - 1, _widthWindow, _heightWindow - 1);
+      JXDrawLine(display, statusWindow, rootGC, _widthWindow - 1, 0, _widthWindow - 1, _heightWindow);
+   }
+   else {
+      JXSetForeground(display, rootGC, colors[COLOR_MENU_DOWN]);
+      JXDrawRectangle(display, statusWindow, rootGC, 0, 0, _widthWindow - 1, _heightWindow - 1);
+   }
+
+   char *_message = np->name;
+   width = GetStringWidth(FONT_MENU, _message);
+   RenderString(statusWindow, FONT_MENU, COLOR_MENU_FG, (_widthWindow - GetStringWidth(FONT_MENU, "Next window:")) / 2, _heightWindow / 4, rootWidth, "Next window:");
+   RenderString(statusWindow, FONT_MENU, COLOR_MENU_FG, (_widthWindow - width) / 2, _heightWindow / 2, rootWidth, _message);
+}
+void indicator_window_switch_off() {
+   if(statusWindow != None) {
+      JXDestroyWindow(display, statusWindow);
+      statusWindow = None;
+   }
 }

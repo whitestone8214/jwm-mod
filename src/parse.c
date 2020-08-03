@@ -160,10 +160,7 @@ static const char *FALSE_VALUE = "false";
 static const char *TRUE_VALUE = "true";
 
 static const char * const CONFIG_FILES[] = {
-  "$XDG_CONFIG_HOME/jwm/jwmrc",
-  "$HOME/.config/jwm/jwmrc",
-  "$HOME/.jwmrc",
-  SYSTEM_CONFIG
+  "/etc/jwm-mod/settings.xml"
 };
 static const unsigned CONFIG_FILE_COUNT = ARRAY_LENGTH(CONFIG_FILES);
 
@@ -1159,7 +1156,7 @@ void ParseDesktop(int desktop, const TokenNode *tp) {
 void ParseDesktopBackground(int desktop, const TokenNode *tp)
 {
    const char *type = FindAttribute(tp->attributes, "type");
-   SetBackground(desktop, type, tp->value);
+   //SetBackground(desktop, type, tp->value);
 }
 
 /** Parse tray style. */

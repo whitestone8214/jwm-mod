@@ -10,6 +10,9 @@
 #ifndef STATUS_H
 #define STATUS_H
 
+#include "client.h"
+#include "settings.h"
+
 struct ClientNode;
 
 /** Create a move status window.
@@ -39,6 +42,10 @@ void UpdateResizeWindow(struct ClientNode *np, int gwidth, int gheight);
 
 /** Destroy a resize status window. */
 void DestroyResizeWindow(void);
+
+void indicator_window_switch_on(const ClientNode *np, StatusWindowType type);
+void indicator_window_switch_update(ClientNode *np);
+void indicator_window_switch_off();
 
 #endif /* STATUS_H */
 

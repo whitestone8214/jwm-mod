@@ -23,7 +23,7 @@
 #endif
 
 #ifdef USE_XFT
-static const char *DEFAULT_FONT = "FreeSans-9";
+static const char *DEFAULT_FONT = "Rotobo-10";
 #else
 static const char *DEFAULT_FONT = "fixed";
 #endif
